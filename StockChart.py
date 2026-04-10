@@ -28,15 +28,22 @@ def get_data(days, tickers):
     symbols = list(tickers.values())
     raw = yf.download(symbols, period=f'{days}d', auto_adjust=True, progress=False)
     
-    close = raw['Close']  # MultiIndexの第1レベルだけ取得
-
-    # 企業名に列名を変換（AAPL → Apple など）
+    # ここで実際の中身を確認
+    st.write("① raw.columns:", raw.columns.tolist())
+    
+    close = raw['Close']
+    st.write("② close.columns:", close.columns.tolist())
+    st.write("③ close.head():", close.head())
+    
     inv_tickers = {v: k for k, v in tickers.items()}
     close = close.rename(columns=inv_tickers)
-
+    st.write("④ rename後 columns:", close.columns.tolist())
+    
     close.index = close.index.strftime('%d %B %Y')
     df = close.T
     df.index.name = 'Name'
+    st.write("⑤ 最終df:", df)
+    
     return df
 
 
