@@ -27,21 +27,17 @@ st.write(f"""
 def get_data(days, tickers):
     symbols = list(tickers.values())
     raw = yf.download(symbols, period=f'{days}d', auto_adjust=True, progress=False)
+    
+    close = raw['Close']  # MultiIndexの第1レベルだけ取得
 
-    # 新バージョン: columns が (Price, Ticker) の2段MultiIndex
-    # raw['Close'] で Ticker名が列になったDataFrameが得られる
-    close = raw['Close']  # 列: AAPL, MSFT, GOOGL ...
-
-    # 企業名（Apple, Microsoft...）に列名を変換
+    # 企業名に列名を変換（AAPL → Apple など）
     inv_tickers = {v: k for k, v in tickers.items()}
     close = close.rename(columns=inv_tickers)
 
-    # 日付インデックスを文字列に変換して転置
     close.index = close.index.strftime('%d %B %Y')
     df = close.T
     df.index.name = 'Name'
     return df
-
 
 
 #@st.cache_data
