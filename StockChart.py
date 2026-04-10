@@ -23,7 +23,7 @@ st.write(f"""
 
 
 
-@st.cache_data
+#@st.cache_data
 def get_data(days, tickers):
     symbols = list(tickers.values())
     raw = yf.download(symbols, period=f'{days}d', auto_adjust=True, progress=False)
