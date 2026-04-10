@@ -28,22 +28,19 @@ def get_data(days, tickers):
     symbols = list(tickers.values())
     raw = yf.download(symbols, period=f'{days}d', auto_adjust=True, progress=False)
     
-    # ここで実際の中身を確認
-    st.write("① raw.columns:", raw.columns.tolist())
+    # level=0 の実際の値を確認して正しくアクセス
+    st.write("level0:", raw.columns.get_level_values(0).unique().tolist())
     
-    close = raw['Close']
-    st.write("② close.columns:", close.columns.tolist())
-    st.write("③ close.head():", close.head())
+    # 'Close' をlevel=0から横断取得
+    close = raw.xs('Close', axis=1, level=0)
+    st.write("close.head():", close.head())
     
     inv_tickers = {v: k for k, v in tickers.items()}
     close = close.rename(columns=inv_tickers)
-    st.write("④ rename後 columns:", close.columns.tolist())
     
     close.index = close.index.strftime('%d %B %Y')
     df = close.T
     df.index.name = 'Name'
-    st.write("⑤ 最終df:", df)
-    
     return df
 
 
