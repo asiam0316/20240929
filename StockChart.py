@@ -21,23 +21,47 @@ st.write(f"""
 ### 過去 **{days}日間** の株価
 """)
 
+
+
 @st.cache_data
 def get_data(days, tickers):
-    df = pd.DataFrame()
-    for company in tickers.keys():
+    # 全ティッカーを一括ダウンロード（リクエスト1回で済む）
+    symbols = list(tickers.values())
+    raw = yf.download(symbols, period=f'{days}d', auto_adjust=True, progress=False)
+
+    # Close価格だけ取り出す
+    close = raw['Close'][symbols]
+
+    # 列名をティッカーから企業名に変換
+    inv_tickers = {v: k for k, v in tickers.items()}
+    close = close.rename(columns=inv_tickers)
+
+    # インデックスを文字列に変換して転置
+    close.index = close.index.strftime('%d %B %Y')
+    df = close.T
+    df.index.name = 'Name'
+    return df
+
+
+
+
+#@st.cache_data
+#def get_data(days, tickers):
+#    df = pd.DataFrame()
+#    for company in tickers.keys():
     #company = 'Apple'
 
-        tkr = yf.Ticker(tickers[company])
-        hist = tkr.history(period=f'{days}d')
+#        tkr = yf.Ticker(tickers[company])
+#        hist = tkr.history(period=f'{days}d')
 
-        hist.index = hist.index.strftime('%d %B %Y')
-        hist = hist[['Close']]
-        hist.columns = [company]
+#        hist.index = hist.index.strftime('%d %B %Y')
+#        hist = hist[['Close']]
+#        hist.columns = [company]
 
-        hist = hist.T
-        hist.index.name = 'Name'
-        df = pd.concat([df, hist])
-    return df
+#        hist = hist.T
+#        hist.index.name = 'Name'
+#        df = pd.concat([df, hist])
+#    return df
 
 try:
     st.sidebar.write("""
