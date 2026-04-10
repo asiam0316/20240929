@@ -26,9 +26,14 @@ st.write(f"""
 #@st.cache_data
 def get_data(days, tickers):
     symbols = list(tickers.values())
-    raw = yf.download(symbols, period=f'{days}d', auto_adjust=False, progress=False)
+    raw = yf.download(symbols, period=f'{days}d', auto_adjust=True, progress=False)
     
-    close = raw.xs('Close', axis=1, level=0)
+    # level=0 の実際の値を確認して正しくアクセス
+    st.write("level0:", raw.columns.get_level_values(0).unique().tolist())
+    
+    # 'Close' をlevel=0から横断取得
+    close = raw.xs('Adj Close', axis=1, level=0)
+    st.write("close.head():", close.head())
     
     inv_tickers = {v: k for k, v in tickers.items()}
     close = close.rename(columns=inv_tickers)
