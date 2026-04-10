@@ -25,23 +25,36 @@ st.write(f"""
 
 @st.cache_data
 def get_data(days, tickers):
-    # 全ティッカーを一括ダウンロード（リクエスト1回で済む）
     symbols = list(tickers.values())
-    raw = yf.download(symbols, period=f'{days}d', auto_adjust=True, progress=False)
-
-    # Close価格だけ取り出す
-    close = raw['Close'][symbols]
-
-    # 列名をティッカーから企業名に変換
+    
+    # period指定より start/end の方が安定
+    end = pd.Timestamp.today()
+    start = end - pd.Timedelta(days=days)
+    
+    raw = yf.download(symbols, start=start, end=end, auto_adjust=True, progress=False)
+    
+    # yfinance 0.2系はMultiIndexになる場合がある
+    if isinstance(raw.columns, pd.MultiIndex):
+        close = raw['Close']
+    else:
+        close = raw[['Close']]
+    
+    # DataFrameに統一
+    if isinstance(close, pd.Series):
+        close = close.to_frame()
+        close.columns = symbols
+    
+    # 企業名に列名変換
     inv_tickers = {v: k for k, v in tickers.items()}
     close = close.rename(columns=inv_tickers)
-
-    # インデックスを文字列に変換して転置
+    
+    # NaNを含む列を確認（デバッグ用）
+    st.sidebar.write(f"取得行数: {len(close)}")
+    
     close.index = close.index.strftime('%d %B %Y')
     df = close.T
     df.index.name = 'Name'
     return df
-
 
 
 
