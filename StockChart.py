@@ -20,10 +20,14 @@ def get_data(days, tickers):
     raw = yf.download(
         symbols,
         period=f'{days}d',
-        auto_adjust=False,  # ← Falseにして 'Close' を使う
+        auto_adjust=False,
         progress=False
     )
-    close = raw.xs('Close', axis=1, level=0)
+
+    # level=0 が 'Close' の列だけを抽出（xs不使用）
+    mask = raw.columns.get_level_values(0) == 'Close'
+    close = raw.loc[:, mask]
+    close.columns = close.columns.get_level_values(1)  # ティッカー名だけにする
 
     inv_tickers = {v: k for k, v in tickers.items()}
     close = close.rename(columns=inv_tickers)
