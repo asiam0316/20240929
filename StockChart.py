@@ -26,31 +26,17 @@ st.write(f"""
 @st.cache_data
 def get_data(days, tickers):
     symbols = list(tickers.values())
-    
-    # period指定より start/end の方が安定
-    end = pd.Timestamp.today()
-    start = end - pd.Timedelta(days=days)
-    
-    raw = yf.download(symbols, start=start, end=end, auto_adjust=True, progress=False)
-    
-    # yfinance 0.2系はMultiIndexになる場合がある
-    if isinstance(raw.columns, pd.MultiIndex):
-        close = raw['Close']
-    else:
-        close = raw[['Close']]
-    
-    # DataFrameに統一
-    if isinstance(close, pd.Series):
-        close = close.to_frame()
-        close.columns = symbols
-    
-    # 企業名に列名変換
+    raw = yf.download(symbols, period=f'{days}d', auto_adjust=True, progress=False)
+
+    # 新バージョン: columns が (Price, Ticker) の2段MultiIndex
+    # raw['Close'] で Ticker名が列になったDataFrameが得られる
+    close = raw['Close']  # 列: AAPL, MSFT, GOOGL ...
+
+    # 企業名（Apple, Microsoft...）に列名を変換
     inv_tickers = {v: k for k, v in tickers.items()}
     close = close.rename(columns=inv_tickers)
-    
-    # NaNを含む列を確認（デバッグ用）
-    st.sidebar.write(f"取得行数: {len(close)}")
-    
+
+    # 日付インデックスを文字列に変換して転置
     close.index = close.index.strftime('%d %B %Y')
     df = close.T
     df.index.name = 'Name'
