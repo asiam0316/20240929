@@ -14,7 +14,7 @@ days = st.sidebar.slider('日数', 1, 50, 20)
 
 st.write(f"### 過去 **{days}日間** の株価")
 
-@st.cache_data
+# @st.cache_data
 def get_data(days, tickers):
     symbols = list(tickers.values())
     raw = yf.download(
